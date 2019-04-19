@@ -1,18 +1,28 @@
 ﻿using System;
-namespace Sliding_Puzzle
+using System.Collections.Generic;
+
+namespace SLIDING_PUZZLE
 {
     public class Driver
     {
         public static void Main(String[] args)
         {
-            TilePuzzle puzzle = new TilePuzzle();
+            IAtomicStateModel<TilePuzzleAction> stateModel = new TilePuzzle();
+            System.Console.WriteLine(stateModel.State);
+
+            TilePuzzleAction[] actionArr = stateModel.GenerateActions().ToArray();
+
+            foreach(TilePuzzleAction action in actionArr)
+            {
+                System.Console.WriteLine(action);
+            }
+
+            System.Console.WriteLine(stateModel.TransitionState(actionArr[1]));
+
+            TilePuzzle puzzle = (TilePuzzle) stateModel;
             //puzzle.ShuffleBoard();
-            System.Console.WriteLine(puzzle);
-            puzzle.SwapTile(0, 1);
-            System.Console.WriteLine(puzzle);
-            puzzle.SwapTile(1, 4);
-            System.Console.WriteLine(puzzle);
-            puzzle.SwapTile(4, 0);
+            puzzle.SwapTile(actionArr[0].From, actionArr[0].To);
+
             System.Console.WriteLine(puzzle);
 
         }

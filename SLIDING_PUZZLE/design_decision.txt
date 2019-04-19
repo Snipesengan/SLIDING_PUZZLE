@@ -1,0 +1,10 @@
+﻿Overview
+I have decided to create an interface to implement one of the state model in
+"Artificial Intelligence: A Modern Approach" which includes the following 
+attributes:
+    - States: A state description
+    - Initial State: The intial state of the problem
+    - Actions: possible moves that can be mode
+    - Transition Model: Given a state and action, generate the resulting state
+    - Goal test: Check whether we have reached our goal
+    - Path cost: Cost of going from one state to the other

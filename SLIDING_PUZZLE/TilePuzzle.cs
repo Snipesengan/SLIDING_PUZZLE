@@ -1,82 +1,70 @@
 ﻿using System;
+using System.Collections.Generic;
 
-namespace Sliding_Puzzle
+namespace SLIDING_PUZZLE
 {
-    class TilePuzzle
+    class TilePuzzle : IAtomicStateModel<TilePuzzleAction>
     {
         public const int DEFAULT_SIZE = 3;
+        public int EmptyPos { get; private set; }
 
-        private int[] board;
-        private int emptyPos;
+        public string State
+        {
+            get
+            {
+                return ToString();
+            }
+        }
+
+        private int[] _board;
+
 
         public TilePuzzle()
         {
-            board = new int[(int)Math.Pow(DEFAULT_SIZE, 2)];
+            _board = new int[(int)Math.Pow(DEFAULT_SIZE, 2)];
 
-            for (int i = 0; i < board.Length; i++)
+            for (int i = 0; i < _board.Length; i++)
             {
-                board[i] = i;
+                _board[i] = i;
             }
 
-            emptyPos = 0;
+            EmptyPos = 0;
         }
 
         public TilePuzzle(int inSize)
         {
-            board = new int[(int)Math.Pow(inSize, 2)];
+            _board = new int[(int)Math.Pow(inSize, 2)];
 
-            for (int i = 0; i < board.Length; i++)
+            for (int i = 0; i < _board.Length; i++)
             {
-                board[i] = i;
+                _board[i] = i;
             }
 
-            emptyPos = 0;
+            EmptyPos = 0;
         }
-
 
         public int GetSize()
         {
-            return (int) Math.Sqrt(board.Length);
-        }
-
-        public int GetEmptyPos()
-        {
-            return emptyPos;
+            return (int) Math.Sqrt(_board.Length);
         }
 
         public void SwapTile(int from, int to)
         {
             int temp;
 
-            if(from < 0 || from >= board.Length || to < 0 || to > board.Length)
-            {
-                String message = "Index Out of Bounds";
-                throw new IndexOutOfRangeException(message);
-            }
+            ValidateMove(from,to);
 
-            if (!(from == emptyPos || to == emptyPos))
-            {
-                String message = "Illegal Move, non-empty tiles";
-                throw new ArgumentException(message);
-            }
+            temp = _board[from];
+            _board[from] = _board[to];
+            _board[to] = temp;
 
-            if(!IsAdj(from, to))
+            if (_board[from] == 0)
             {
-                String message = "Illegal Move, non-adjacent tiles";
-                throw new ArgumentException(message);
-            }
-
-            temp = board[from];
-            board[from] = board[to];
-            board[to] = temp;
-
-            if(board[from] == 0)
-            {
-                emptyPos = from;
+                EmptyPos = from;
             }
             else
             {
-                emptyPos = to;
+                EmptyPos = to;
             }
 
         }
@@ -87,7 +75,7 @@ namespace Sliding_Puzzle
             //https://www.dotnetperls.com/fisher-yates-shuffle
 
             Random _random = new Random();
-            int n = board.Length;
+            int n = _board.Length;
 
             for (int i = 0; i < n; i++)
             {
@@ -95,15 +83,15 @@ namespace Sliding_Puzzle
                 // ... The argument is an exclusive bound.
                 //     So we will not go past the end of the array.
                 int r = i + _random.Next(n - i);
-                int t = board[r];
+                int t = _board[r];
 
                 if (t == 0)
                 {
-                    emptyPos = i;
+                    EmptyPos = i;
                 }
 
-                board[r] = board[i];
-                board[i] = t;
+                _board[r] = _board[i];
+                _board[i] = t;
             }
         }
 
@@ -111,36 +99,113 @@ namespace Sliding_Puzzle
         {
             String str = "[";
 
-            for(int i = 0; i < board.Length - 1; i++)
+            for(int i = 0; i < _board.Length - 1; i++)
             {
-                str += board[i] + " ";
+                str += _board[i] + " ";
             }
 
-            str += board[board.Length - 1] + "]";
+            str += _board[_board.Length - 1] + "]";
 
             return str;
         }
 
+        // Interface Methods
+
+        List<TilePuzzleAction> IAtomicStateModel<TilePuzzleAction>.
+        GenerateActions()
+        {
+            List<TilePuzzleAction> actionList = new List<TilePuzzleAction>();
+
+            int emptyRow = GetRow(EmptyPos);
+            int emptyCol = GetCol(EmptyPos);
+
+            //Cell is not at left edge
+            if(emptyCol > 0)
+            {
+                actionList.Add(new TilePuzzleAction(EmptyPos, EmptyPos - 1));
+            }
+
+            //Cell is not at right edge
+            if (emptyCol < GetSize()-1)
+            {
+                actionList.Add(new TilePuzzleAction(EmptyPos, EmptyPos + 1));
+            }
+
+            //Cell is not at top edge
+            if (emptyRow > 0)
+            {
+                actionList.Add(new TilePuzzleAction(EmptyPos, 
+                EmptyPos - GetSize()));
+            }
+
+            //Cell is not at bottom edge
+            if (emptyRow < GetSize() + 1)
+            {
+                actionList.Add(new TilePuzzleAction(EmptyPos, 
+                EmptyPos + GetSize()));
+            }
+
+            return actionList;
+        }
+
+        public string TransitionState(TilePuzzleAction action)
+        {
+            string tranState;
+
+            SwapTile(action.From, action.To);
+            tranState = ToString();
+            SwapTile(action.From, action.To);
+
+            return tranState;
+        }
+
+        public double PathCost(TilePuzzleAction action)
+        {
+            ValidateMove(action.From, action.To);
+            return 1.0;
+        }
+
         //Private Methods
+
+        private void ValidateMove(int from, int to)
+        {
+            if (from < 0||from >= _board.Length||to < 0||to > _board.Length)
+            {
+                String message = "Index Out of Bounds";
+                throw new IndexOutOfRangeException(message);
+            }
+
+            if (!(from == EmptyPos||to == EmptyPos))
+            {
+                String message = "Illegal Move, non-empty tiles";
+                throw new ArgumentException(message);
+            }
+
+            if (!IsAdj(from, to))
+            {
+                String message = "Illegal Move, non-adjacent tiles";
+                throw new ArgumentException(message);
+            }
+        }
 
         private Boolean IsAdj(int from, int to)
         {
             double dist = 0;
 
-            dist += Math.Pow((GetRow(from) - GetRow(to)),2);
+            dist += Math.Pow((GetRow(from) - GetRow(to)), 2);
             dist += Math.Pow((GetCol(from) - GetCol(to)), 2);
 
-            return (int)dist == 1;
+            return Math.Abs(Math.Sqrt(dist) - 1.0) < 0.001;
         }
 
         private int GetRow(int idx)
         {
-            return idx / GetSize();
+            return idx / this.GetSize();
         }
 
         private int GetCol(int idx)
         {
-            return idx % GetSize();
+            return idx % this.GetSize();
         }
     }
 }
