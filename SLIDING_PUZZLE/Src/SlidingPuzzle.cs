@@ -1,0 +1,237 @@
+﻿using System;
+using System.Collections.Generic;
+using StateModel.Interface;
+
+namespace StateModel.BoardGame
+{
+    public class SlidingPuzzle : IAtomicStateModel<string,SlidingPuzzleAction>
+    {
+        // Class fields
+        public const int DEFAULT_SIZE = 3;
+        public int EmptyPos { get; private set; }
+        public int[] Board { get; private set; }
+
+        public string State
+        {
+            get
+            {
+                return ToString();
+            }
+        }
+
+        // Constructors
+
+        public SlidingPuzzle()
+        {
+            Board = new int[(int)Math.Pow(DEFAULT_SIZE, 2)];
+
+            for (int i = 0; i < Board.Length; i++)
+            {
+                Board[i] = i;
+            }
+
+            EmptyPos = 0;
+        }
+
+        public SlidingPuzzle(int inSize)
+        {
+            Board = new int[(int)Math.Pow(inSize, 2)];
+
+            for (int i = 0; i < Board.Length; i++)
+            {
+                Board[i] = i;
+            }
+
+            EmptyPos = 0;
+        }
+
+        public SlidingPuzzle(int[] board)
+        {
+            // Check if length of board is a perfect square
+            if((Math.Abs(Math.Sqrt(board.Length) % 1) > 0.001))
+            {
+                string msg = String.Format("Length must be perfect square: {0}", 
+                    board.Length);
+
+                throw new ArgumentException(msg);
+            }
+
+            // Check if all number exists, and there is no duplicates
+            for(int i = 0; i < board.Length; i++)
+            {
+                if(Array.IndexOf(board, i) < 0)
+                {
+                    string msg = String.Format("Board does not contain {0}", i);
+                    throw new ArgumentException(msg);
+                }
+
+                if(board[i] == 0)
+                {
+                    EmptyPos = i;
+                }
+            }
+
+            Board = (int[]) board.Clone();
+        }
+
+        // Methods
+
+        public int GetSize()
+        {
+            return (int) Math.Sqrt(Board.Length);
+        }
+
+        public void SwapTile(int from, int to)
+        {
+            int temp;
+
+            ValidateMove(from,to);
+
+            temp = Board[from];
+            Board[from] = Board[to];
+            Board[to] = temp;
+
+            if (Board[from] == 0)
+            {
+                EmptyPos = from;
+            }
+            else
+            {
+                EmptyPos = to;
+            }
+
+        }
+
+        public void ShuffleBoard()
+        {
+            //References: Fisher-Yates shuffle 
+            //https://www.dotnetperls.com/fisher-yates-shuffle
+
+            Random _random = new Random();
+            int n = Board.Length;
+
+            for (int i = 0; i < n; i++)
+            {
+                // Use Next on random instance with an argument.
+                // ... The argument is an exclusive bound.
+                //     So we will not go past the end of the array.
+                int r = i + _random.Next(n - i);
+                int t = Board[r];
+
+                if (t == 0)
+                {
+                    EmptyPos = i;
+                }
+
+                Board[r] = Board[i];
+                Board[i] = t;
+            }
+        }
+
+        public override String ToString()
+        {
+            return "{" + string.Join(",", Board) + "}";
+        }
+
+        // Interface Methods
+
+        public List<SlidingPuzzleAction> GetActions()
+        {
+            List<SlidingPuzzleAction> actionList = new List<SlidingPuzzleAction>();
+
+            int emptyRow = GetRow(EmptyPos);
+            int emptyCol = GetCol(EmptyPos);
+
+            //Cell is not at left edge
+            if (emptyCol > 0)
+            {
+                actionList.Add(new SlidingPuzzleAction(EmptyPos, EmptyPos - 1));
+            }
+
+            //Cell is not at right edge
+            if (emptyCol < GetSize() - 1)
+            {
+                actionList.Add(new SlidingPuzzleAction(EmptyPos, EmptyPos + 1));
+            }
+
+            //Cell is not at top edge
+            if (emptyRow > 0)
+            {
+                actionList.Add(new SlidingPuzzleAction(EmptyPos,
+                EmptyPos - GetSize()));
+            }
+
+            //Cell is not at bottom edge
+            if (emptyRow < GetSize() - 1)
+            {
+                actionList.Add(new SlidingPuzzleAction(EmptyPos,
+                EmptyPos + GetSize()));
+            }
+            return actionList;
+        }
+
+        public string TransitionState(SlidingPuzzleAction action)
+        {
+            string tranState;
+
+            SwapTile(action.From, action.To);
+            tranState = ToString();
+            SwapTile(action.From, action.To);
+
+
+
+            return tranState;
+        }
+
+        public double PathCost(SlidingPuzzleAction action)
+        {
+            ValidateMove(action.From, action.To);
+            return 1.0;
+        }
+
+        //Private Methods
+
+        private void ValidateMove(int from, int to)
+        {
+            if (from < 0||from >= Board.Length||to < 0||to > Board.Length)
+            {
+                String message = "Index Out of Bounds";
+                throw new IndexOutOfRangeException(message);
+            }
+
+            if (!(from == EmptyPos||to == EmptyPos))
+            {
+                String message = "Illegal Move, non-empty tiles";
+                throw new ArgumentException(message);
+            }
+
+            if (!IsAdj(from, to))
+            {
+                String message = "Illegal Move, non-adjacent tiles";
+                throw new ArgumentException(message);
+            }
+        }
+
+        private Boolean IsAdj(int from, int to)
+        {
+            double dist = 0;
+
+            dist += Math.Pow((GetRow(from) - GetRow(to)), 2);
+            dist += Math.Pow((GetCol(from) - GetCol(to)), 2);
+
+            return Math.Abs(Math.Sqrt(dist) - 1.0) < 0.001;
+        }
+
+        private int GetRow(int idx)
+        {
+            return idx / this.GetSize();
+        }
+
+        private int GetCol(int idx)
+        {
+            return idx % this.GetSize();
+        }
+
+
+    }
+}
