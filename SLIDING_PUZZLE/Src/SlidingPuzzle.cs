@@ -1,26 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using StateModel.Interface;
 
 namespace StateModel.BoardGame
 {
-    public class SlidingPuzzle : IAtomicStateModel<string,SlidingPuzzleAction>
+    public class SlidingPuzzle : IAtomicState<string,SlidingPuzzleAction>
     {
         // Class fields
         public const int DEFAULT_SIZE = 3;
         public int EmptyPos { get; private set; }
         public int[] Board { get; private set; }
 
-        public string State
-        {
-            get
-            {
-                return ToString();
-            }
-        }
-
         // Constructors
-
         public SlidingPuzzle()
         {
             Board = new int[(int)Math.Pow(DEFAULT_SIZE, 2)];
@@ -48,29 +40,9 @@ namespace StateModel.BoardGame
         public SlidingPuzzle(int[] board)
         {
             // Check if length of board is a perfect square
-            if((Math.Abs(Math.Sqrt(board.Length) % 1) > 0.001))
-            {
-                string msg = String.Format("Length must be perfect square: {0}", 
-                    board.Length);
+            ValidateBoard(board);
 
-                throw new ArgumentException(msg);
-            }
-
-            // Check if all number exists, and there is no duplicates
-            for(int i = 0; i < board.Length; i++)
-            {
-                if(Array.IndexOf(board, i) < 0)
-                {
-                    string msg = String.Format("Board does not contain {0}", i);
-                    throw new ArgumentException(msg);
-                }
-
-                if(board[i] == 0)
-                {
-                    EmptyPos = i;
-                }
-            }
-
+            EmptyPos = Array.IndexOf(board, 0);
             Board = (int[]) board.Clone();
         }
 
@@ -128,6 +100,25 @@ namespace StateModel.BoardGame
             }
         }
 
+        public int[] CreateBoard(string state)
+        {
+            int[] board;
+
+            string[] data = state.Trim(new char[] { '{', '}' }).Split(',');
+            int i = 0;
+            board = new int[data.Length];
+            foreach(string value in data)
+            {
+                int number = Int32.Parse(value);
+                board[i] = number;
+                i++;
+            }
+
+            ValidateBoard(board);
+
+            return board;
+        }
+
         public override String ToString()
         {
             return "{" + string.Join(",", Board) + "}";
@@ -135,9 +126,20 @@ namespace StateModel.BoardGame
 
         // Interface Methods
 
+        public string GetState()
+        {
+            return ToString();
+        }
+
+        public void SetState(string state)
+        {
+            Board = CreateBoard(state);
+            EmptyPos = Array.IndexOf(Board, 0);
+        }
+
         public List<SlidingPuzzleAction> GetActions()
         {
-            List<SlidingPuzzleAction> actionList = new List<SlidingPuzzleAction>();
+            List<SlidingPuzzleAction> actionL = new List<SlidingPuzzleAction>();
 
             int emptyRow = GetRow(EmptyPos);
             int emptyCol = GetCol(EmptyPos);
@@ -145,29 +147,29 @@ namespace StateModel.BoardGame
             //Cell is not at left edge
             if (emptyCol > 0)
             {
-                actionList.Add(new SlidingPuzzleAction(EmptyPos, EmptyPos - 1));
+                actionL.Add(new SlidingPuzzleAction(EmptyPos, EmptyPos - 1));
             }
 
             //Cell is not at right edge
             if (emptyCol < GetSize() - 1)
             {
-                actionList.Add(new SlidingPuzzleAction(EmptyPos, EmptyPos + 1));
+                actionL.Add(new SlidingPuzzleAction(EmptyPos, EmptyPos + 1));
             }
 
             //Cell is not at top edge
             if (emptyRow > 0)
             {
-                actionList.Add(new SlidingPuzzleAction(EmptyPos,
+                actionL.Add(new SlidingPuzzleAction(EmptyPos,
                 EmptyPos - GetSize()));
             }
 
             //Cell is not at bottom edge
             if (emptyRow < GetSize() - 1)
             {
-                actionList.Add(new SlidingPuzzleAction(EmptyPos,
+                actionL.Add(new SlidingPuzzleAction(EmptyPos,
                 EmptyPos + GetSize()));
             }
-            return actionList;
+            return actionL;
         }
 
         public string TransitionState(SlidingPuzzleAction action)
@@ -209,6 +211,27 @@ namespace StateModel.BoardGame
             {
                 String message = "Illegal Move, non-adjacent tiles";
                 throw new ArgumentException(message);
+            }
+        }
+
+        private void ValidateBoard(int[] board)
+        {
+            if ((Math.Abs(Math.Sqrt(board.Length) % 1) > 0.001))
+            {
+                string msg = String.Format("Length must be perfect square: {0}",
+                    board.Length);
+
+                throw new ArgumentException(msg);
+            }
+
+            // Check if all number exists, and there is no duplicates
+            for (int i = 0; i < board.Length; i++)
+            {
+                if (Array.IndexOf(board, i) < 0)
+                {
+                    string msg = String.Format("Board does not contain {0}", i);
+                    throw new ArgumentException(msg);
+                }
             }
         }
 

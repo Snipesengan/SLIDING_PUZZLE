@@ -3,14 +3,13 @@ using System.Collections.Generic;
 
 namespace StateModel.Interface
 {
-    public interface IAtomicStateModel<E,T>
+    public interface IAtomicState<THash,TAction>
     {
-        //Property
-        E State { get;}
-
         //Methods
-        List<T> GetActions();
-        E TransitionState(T action);
-        double PathCost(T action);
+        THash GetState();
+        void SetState(THash state);
+        List<TAction> GetActions();
+        THash TransitionState(TAction action);
+        double PathCost(TAction action);
     }
 }

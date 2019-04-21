@@ -38,12 +38,15 @@ namespace StateModel.BoardGame
             return HashCode.Combine(From, To);
         }
 
-        public static bool operator ==(SlidingPuzzleAction action1, SlidingPuzzleAction action2)
+        public static bool operator 
+        ==(SlidingPuzzleAction action1, SlidingPuzzleAction action2)
         {
-            return EqualityComparer<SlidingPuzzleAction>.Default.Equals(action1, action2);
+            return EqualityComparer<SlidingPuzzleAction>.
+            Default.Equals(action1, action2);
         }
 
-        public static bool operator !=(SlidingPuzzleAction action1, SlidingPuzzleAction action2)
+        public static bool operator 
+        !=(SlidingPuzzleAction action1, SlidingPuzzleAction action2)
         {
             return !(action1 == action2);
         }

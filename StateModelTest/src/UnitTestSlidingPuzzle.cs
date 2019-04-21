@@ -26,13 +26,38 @@ namespace StateModelTest
         [Theory]
         [InlineData(new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 })]
         [InlineData(new int[] { 1, 2, 3, 4, 0, 5, 6, 7, 8 })]
-        [InlineData(new int[] { 1, 2, 3, 4, 7, 5, 6, 0, 8 })]
+        [InlineData(new int[] { 1, 2, 3, 4, 7, 5, 0, 6, 8 })]
         public void TestConstructo2(int[] board)
         {
             SlidingPuzzle puzzle = new SlidingPuzzle(board);
             string str = "{" + string.Join(",", board) + "}";
             System.Console.WriteLine("Testing SlidingPuzzle(int[] {0})", str);
             Assert.True(Enumerable.SequenceEqual(puzzle.Board, board));
+        }
+
+        [Theory]
+        [InlineData(new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 })]
+        [InlineData(new int[] { 1, 2, 3, 4, 0, 5, 6, 7, 8 })]
+        [InlineData(new int[] { 1, 2, 3, 4, 7, 5, 6, 0, 8 })]
+        public void TestGetState(int[] board)
+        {
+            SlidingPuzzle puzzle = new SlidingPuzzle(board);
+            string str = "{" + string.Join(",", board) + "}";
+            System.Console.WriteLine("Testing GetState() - Expect{0}",str);
+            Assert.Equal(str, puzzle.GetState());
+        }
+
+        [Theory]
+        [InlineData("{0,1,2,3,4,5,6,7,8}")]
+        [InlineData("{1,2,3,4,0,5,6,7,8}")]
+        [InlineData("{1,2,3,4,7,5,6,0,8}")]
+        public void TestSetState(string state)
+        {
+            SlidingPuzzle puzzle = new SlidingPuzzle();
+            puzzle.SetState(state);
+            string board = "{" + string.Join(",", puzzle.Board) + "}";
+            System.Console.WriteLine("Testing SetState({0})", state);
+            Assert.Equal(board, state);
         }
 
         [Fact]
@@ -57,7 +82,7 @@ namespace StateModelTest
             puzzle.SwapTile(4, 3);
             Assert.True(Enumerable.SequenceEqual(puzzle.Board, expected3));
             System.Console.WriteLine("\tSwapped 4,3");
-            puzzle.SwapTile(3, 6); 
+            puzzle.SwapTile(3, 6);
             Assert.True(Enumerable.SequenceEqual(puzzle.Board, expected4));
             System.Console.WriteLine("\tSwapped 3,6");
             puzzle.SwapTile(6, 7);
@@ -84,7 +109,7 @@ namespace StateModelTest
             expected[2] = new SlidingPuzzleAction(4, 4 - 3);
             expected[3] = new SlidingPuzzleAction(4, 4 + 3);
 
-            System.Console.WriteLine("Testing GenerateActions() (Center case)");
+            System.Console.WriteLine("Testing GenerateActions()");
             System.Console.WriteLine("\tCenter Case");
             Assert.Equal(actual, expected);
         }
@@ -151,5 +176,7 @@ namespace StateModelTest
             }
 
         }
+
+        // Private
     }
 }
