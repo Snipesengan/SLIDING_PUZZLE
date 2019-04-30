@@ -43,7 +43,7 @@ namespace StateModelTest
         {
             SlidingPuzzle puzzle = new SlidingPuzzle(board);
             string str = "{" + string.Join(",", board) + "}";
-            System.Console.WriteLine("Testing GetState() - Expect{0}",str);
+            System.Console.WriteLine("Testing GetState() - Expect{0}", str);
             Assert.Equal(str, puzzle.GetState());
         }
 
@@ -163,20 +163,30 @@ namespace StateModelTest
             expectedQ.Enqueue(new int[] { 1, 2, 3, 4, 7, 5, 6, 0, 8 });
 
 
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 System.Console.WriteLine("Testing TransitionState(" +
-                    string.Format("SlidingPuzzleAction {0}", 
+                    string.Format("SlidingPuzzleAction {0}",
                     actions[i].ToString()));
                 string actual = puzzle.TransitionState(actions[i]);
-                string expected = "{" + string.Join(",", 
+                string expected = "{" + string.Join(",",
                     expectedQ.Dequeue()) + "}";
 
                 Assert.Equal(actual, expected);
             }
-
         }
 
-        // Private
+        [Fact]
+        public void TestEquals()
+        {
+            var puzzle =
+                new SlidingPuzzle(new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 });
+
+            System.Console.WriteLine("Testing Equals method");
+
+            Assert.True(puzzle.Equals("{0,1,2,3,4,5,6,7,8}"));
+            Assert.False(puzzle.Equals("{1,2,3,4,0,5,6,7,8}"));
+            // Private
+        }
     }
 }

@@ -11,4 +11,7 @@
   <ItemGroup>
     <Folder Include="src\" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="OptimizedPriorityQueue" Version="4.2.0" />
+  </ItemGroup>
 </Project>

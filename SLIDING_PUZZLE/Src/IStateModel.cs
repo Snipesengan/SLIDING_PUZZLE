@@ -11,5 +11,7 @@ namespace StateModel.Interface
         List<TAction> GetActions();
         THash TransitionState(TAction action);
         double PathCost(TAction action);
+        Boolean Equals(THash state);
+        double H(THash state, String hType);
     }
 }

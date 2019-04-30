@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using StateModel.Interface;
 
 namespace StateModel.BoardGame
 {
-    public class SlidingPuzzle : IAtomicState<string,SlidingPuzzleAction>
+    public class SlidingPuzzle : 
+        IAtomicState<string,SlidingPuzzleAction>
     {
         // Class fields
         public const int DEFAULT_SIZE = 3;
@@ -119,6 +121,27 @@ namespace StateModel.BoardGame
             return board;
         }
 
+        public double Heuristic1(string goalState)
+        {
+            double est = 0;
+            int[] goal = CreateBoard(goalState);
+
+            if(goal.Length != Board.Length)
+            {
+                string msg = String.Format("Dimension must be the same: {0}",
+                                goal.Length);
+                throw new ArgumentException(msg);
+            }
+
+            for(int i = 0; i < goal.Length; i++)
+            {
+                var value = goal[i];
+                est += Math.Abs(i - Array.IndexOf(Board, value));
+            }
+
+            return est;
+        }
+
         public override String ToString()
         {
             return "{" + string.Join(",", Board) + "}";
@@ -191,6 +214,19 @@ namespace StateModel.BoardGame
             return 1.0;
         }
 
+        public double H(String goalState, String hType)
+        {
+            switch(hType)
+            {
+                case "Default":
+                    return Heuristic1(goalState);
+
+                default:
+                    string msg = "Invalid Heuristic type: %s";
+                    throw new ArgumentException(String.Format(msg, hType));
+            }
+        }
+
         //Private Methods
 
         private void ValidateMove(int from, int to)
@@ -255,6 +291,10 @@ namespace StateModel.BoardGame
             return idx % this.GetSize();
         }
 
-
+        public bool Equals(string boardState)
+        {
+            var puzzle = CreateBoard(boardState);
+            return Enumerable.SequenceEqual(puzzle, Board);
+        }
     }
 }
